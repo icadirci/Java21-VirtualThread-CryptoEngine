@@ -106,6 +106,80 @@ VALUES ('BTCUSDT', 65000, 'ABOVE', false, 'user@example.com');
 - After an alert is triggered, it is marked with `is_triggered = true`.
 
 
+## REST API
+
+Base URL: `http://localhost:8080`
+
+- **GET** `/api/v1/prices/{symbol}`
+  - Returns the last known price for a symbol.
+  - Example:
+
+```bash
+curl -s http://localhost:8080/api/v1/prices/BTCUSDT
+```
+
+Example response:
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "targetPrice": 65000.12
+}
+```
+
+- **GET** `/api/v1/alerts`
+  - Lists all non-triggered (active) alerts.
+  - Example:
+
+```bash
+curl -s http://localhost:8080/api/v1/alerts
+```
+
+Example response:
+
+```json
+[
+  {
+    "id": 1,
+    "symbol": "BTCUSDT",
+    "targetPrice": 65000,
+    "condition": "ABOVE",
+    "triggered": false,
+    "userEmail": "user@example.com"
+  }
+]
+```
+
+- **POST** `/api/v1/alerts`
+  - Creates a new alert.
+  - Body (JSON):
+
+```json
+{
+  "symbol": "BTCUSDT",
+  "targetPrice": 65000,
+  "condition": "ABOVE",
+  "userEmail": "user@example.com"
+}
+```
+
+  - Example:
+
+```bash
+curl -s -X POST http://localhost:8080/api/v1/alerts \
+  -H "Content-Type: application/json" \
+  -d '{
+    "symbol": "BTCUSDT",
+    "targetPrice": 65000,
+    "condition": "ABOVE",
+    "userEmail": "user@example.com"
+  }'
+```
+
+  - Notes:
+    - `condition` accepts `ABOVE` or `BELOW`.
+    - Validation errors return `400 Bad Request` with details.
+
 ## Logs and Observability
 The app logs each periodic trigger, total batch fetch duration, and triggered alerts. Sample (messages are localized in code):
 
