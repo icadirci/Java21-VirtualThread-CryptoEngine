@@ -1,0 +1,12 @@
+package com.crypto.watcher.crypto_watcher.dto.response;
+
+import java.time.LocalDateTime;
+import java.util.Map;
+
+public record ErrorResponse(
+        int status,
+        String message,
+        Map<String, String> errors,
+        LocalDateTime timestamp
+) {
+}

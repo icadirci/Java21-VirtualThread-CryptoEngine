@@ -10,6 +10,13 @@ import java.math.BigDecimal;
 @Slf4j
 public class NotificationService {
 
+    /**
+     * Sends notification for a triggered alert (logs as an example).
+     *
+     * @param email
+     * @param symbol
+     * @param price
+     */
     @Async
     public void sendAlertNotification(String email, String symbol, BigDecimal price) {
         log.info("🔔 [ALARM GÖNDERİLDİ] -> Alıcı: {}, Coin: {}, Tetiklenen Fiyat: {}",

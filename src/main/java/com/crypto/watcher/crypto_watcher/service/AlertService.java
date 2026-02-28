@@ -1,5 +1,6 @@
 package com.crypto.watcher.crypto_watcher.service;
 
+import com.crypto.watcher.crypto_watcher.dto.request.CreateAlertRequest;
 import com.crypto.watcher.crypto_watcher.entity.Alert;
 import com.crypto.watcher.crypto_watcher.enums.AlertCondition;
 import com.crypto.watcher.crypto_watcher.repository.AlertRepository;
@@ -18,6 +19,34 @@ public class AlertService {
         this.notificationService = notificationService;
     }
 
+    /**
+     * Returns all non-triggered alert records.
+     */
+    public List<Alert> allAlerts(){
+        return alertRepository.findByIsTriggeredFalse();
+    }
+
+    /**
+     * Creates a new alert record.
+     *
+     * @param createAlertRequest
+     * @return
+     */
+    public Alert create(CreateAlertRequest createAlertRequest) {
+        Alert alert = new Alert();
+        alert.setCondition(createAlertRequest.condition());
+        alert.setSymbol(createAlertRequest.symbol());
+        alert.setUserEmail(createAlertRequest.userEmail());
+        alert.setTargetPrice(createAlertRequest.targetPrice());
+        return alertRepository.save(alert);
+    }
+
+    /**
+     * Checks active alerts for the symbol given the current price and triggers them when matched.
+     *
+     * @param symbol
+     * @param currentPrice
+     */
     public void checkAlarms(String symbol, BigDecimal currentPrice) {
         List<Alert> activeAlerts = alertRepository.findBySymbolAndIsTriggeredFalse(symbol);
 

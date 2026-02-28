@@ -1,6 +1,7 @@
 package com.crypto.watcher.crypto_watcher.service;
 
 import com.crypto.watcher.crypto_watcher.dto.BinancePriceRecord;
+import com.crypto.watcher.crypto_watcher.dto.response.CryptoPriceResponse;
 import com.crypto.watcher.crypto_watcher.entity.CryptoPrice;
 import com.crypto.watcher.crypto_watcher.repository.PriceRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +12,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 
@@ -29,6 +31,28 @@ public class CryptoService {
         this.alertService = alertService;
     }
 
+    /**
+     * Returns the last known price for a symbol (from cache or database).
+     *
+     * @param symbol
+     */
+    public CryptoPriceResponse getPrice(String symbol){
+        BigDecimal lastTargetPrice = lastPrices.get(symbol);
+        if (lastTargetPrice == null) {
+            Optional<CryptoPrice> lastData = priceRepository.findTopBySymbolOrderByIdDesc(symbol);
+            if (!lastData.isPresent()) {
+                throw new RuntimeException("Not found info");
+            }
+            lastTargetPrice = lastData.get().getPrice();
+        }
+        return new CryptoPriceResponse(symbol, lastTargetPrice);
+    }
+
+    /**
+     * Fetches the live price for the symbol from Binance API and processes it.
+     *
+     * @param symbol
+     */
     public void fetchRealPrice(String symbol) {
         try {
             BinancePriceRecord response = restClient.get()
@@ -41,6 +65,9 @@ public class CryptoService {
         }
     }
 
+    /**
+     * Fetches the defined symbols in parallel using virtual threads and logs total execution time.
+     */
     public void runLiveAnalysis() {
 
         List<String> symbols = List.of(
@@ -62,6 +89,9 @@ public class CryptoService {
         log.info("Canlı veri çekme tamamlandı. Toplam süre: {} ms", (endTime - startTime));
     }
 
+    /**
+     * If the price changed, checks alerts and persists the data.
+     */
     public void processPrice(String symbol, BigDecimal currentPrice) {
         BigDecimal lastPrice = lastPrices.get(symbol);
         if (lastPrice == null || !lastPrice.equals(currentPrice)){
@@ -71,6 +101,12 @@ public class CryptoService {
         }
     }
 
+    /**
+     * Persists the price record to the database.
+     *
+     * @param symbol
+     * @param price
+     */
     private void saveToDatabase(String symbol, BigDecimal price) {
         CryptoPrice cryptoPrice = new CryptoPrice();
         cryptoPrice.setSymbol(symbol);
